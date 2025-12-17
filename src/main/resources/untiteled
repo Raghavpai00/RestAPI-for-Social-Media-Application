@@ -1,0 +1,25 @@
+
+
+ create sequence post_seq start with 1 increment by 50
+ 
+ create sequence user_details_seq start with 1 increment by 50
+ 
+ create table post 
+ (id integer not null, user_id integer, description varchar(255), primary key (id))
+ 
+ create table user_details 
+ (birth_date date, id integer not null, name varchar(255), primary key (id))
+ 
+ alter table if exists post add constraint FKa3biitl48c71riii9uyelpdhb foreign key (user_id) references user_details
+ 
+ 
+ spring security
+ 
+ Filter Chain
+ 1)all requests should be authenticated
+ 2)if a request is not authenticated, a web page is shown
+ 3) CSRF->POST,PUT
+ 
+ Configuration
+ 
+ Bean FilterChain
