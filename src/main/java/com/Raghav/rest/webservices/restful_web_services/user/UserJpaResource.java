@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import com.Raghav.rest.webservices.restful_web_services.exception.PostNotFoundException;
 import com.Raghav.rest.webservices.restful_web_services.jpa.PostRepository;
 import com.Raghav.rest.webservices.restful_web_services.jpa.UserRepository;
 
@@ -37,12 +38,12 @@ public class UserJpaResource {
 		this.userRepository=userRepository;
 		this.postRepository=postRepository;
 	}
-	@GetMapping("/jpa/users")
+	@GetMapping("/jpa/users")//for getting all users
 public List<User> retrieveAllUser() {
 	return userRepository.findAll();
 }
 	
-	@GetMapping("/jpa/users/{id}")
+	@GetMapping("/jpa/users/{id}")//for getting perticular user
 	public EntityModel< User> retrieveUser(@PathVariable int id) {
 		Optional<User> user= userRepository.findById(id);
 		if(user.isEmpty())
@@ -56,12 +57,12 @@ public List<User> retrieveAllUser() {
 		return entityModel;
 	}
 	
-	@DeleteMapping("/jpa/users/{id}")
+	@DeleteMapping("/jpa/users/{id}")//for deleting perticular user
 	public void DeleteUser(@PathVariable int id) {
 		userRepository.deleteById(id);
 			}
 	
-	@GetMapping("/jpa/users/{id}/posts")
+	@GetMapping("/jpa/users/{id}/posts")//for getting all the posts from perticular user
 	public List<Post> retrivePostsForUser(@PathVariable int id) {
 		Optional<User> user= userRepository.findById(id);
 		if(user.isEmpty())
@@ -69,8 +70,22 @@ public List<User> retrieveAllUser() {
 		
 		return user.get().getPosts();
 			}
+	
+	@GetMapping("/jpa/users/{userId}/posts/{postId}")// for getting perticular post from perticular user
+	public ResponseEntity<Post> getPostForUser(
+	        @PathVariable int userId,
+	        @PathVariable int postId) {
+
+	    userRepository.findById(userId)
+	            .orElseThrow(() -> new UserNotFoundException("id:" + userId));
+
+	    Post post = postRepository.findById(postId)
+	            .orElseThrow(() -> new PostNotFoundException("postId:" + postId));
+
+	    return ResponseEntity.ok(post);
+	}
  
-	@PostMapping("/jpa/users")
+	@PostMapping("/jpa/users")// for creating a new user
 	public ResponseEntity<User> createUsers(  @ Valid  @RequestBody User user) {
 		
 		User savedUser=userRepository.save(user);
@@ -82,7 +97,7 @@ public List<User> retrieveAllUser() {
 		
 	return	ResponseEntity.created(location).build();
 	}
-	@PostMapping("/jpa/users/{id}/posts")
+	@PostMapping("/jpa/users/{id}/posts") //for uploading a new post for perticular user
 	public ResponseEntity<Object> createPostForUser(@PathVariable int id,@ Valid  @RequestBody Post post) {
 		Optional<User> user= userRepository.findById(id);
 		if(user.isEmpty())
@@ -100,6 +115,30 @@ public List<User> retrieveAllUser() {
 	return	ResponseEntity.created(location).build();
 		
 			}
+	
+	@DeleteMapping("/jpa/users/{userId}/posts/{postId}") //for deleting a specific post of specific user
+	public ResponseEntity<Void> deletePostForUser(
+	        @PathVariable int userId,
+	        @PathVariable int postId) {
+
+	    // check user exists
+	    User user = userRepository.findById(userId)
+	            .orElseThrow(() -> new UserNotFoundException("id:" + userId));
+
+	    // check post exists
+	    Post post = postRepository.findById(postId)
+	            .orElseThrow(() -> new PostNotFoundException("postId:" + postId));
+
+	    // optional safety check: post belongs to user
+	    if (!post.getUser().getId().equals(user.getId())) {
+	        throw new RuntimeException("Post does not belong to user");
+	    }
+
+	    postRepository.delete(post);
+
+	    return ResponseEntity.noContent().build(); // 204 NO CONTENT
+	}
+
 }
 
 

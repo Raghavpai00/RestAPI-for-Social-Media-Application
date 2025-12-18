@@ -23,3 +23,9 @@
  Configuration
  
  Bean FilterChain
+ 
+  {
+       
+       "name": "sharvin",
+        "birthDate": "2009-12-20"
+    }
